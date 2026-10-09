@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Detector Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 25px;
+            font-family: Arial, sans-serif;
+            background: #f1f7f1;
+            color: #263b2c;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: #206b3a;
+        }
+        nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        nav a {
+            background: #267745;
+            color: white;
+            text-decoration: none;
+            padding: 11px 15px;
+            border-radius: 7px;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        .card {
+            background: white;
+            padding: 23px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #0000000d;
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #607064;
+            font-size: 16px;
+        }
+        .number {
+            font-size: 34px;
+            font-weight: bold;
+            color: #267745;
+        }
+        .section-title {
+            color: #206b3a;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 13px;
+            border-bottom: 1px solid #e3eae4;
+            text-align: left;
+        }
+        th {
+            background: #267745;
+            color: white;
+        }
+        .confidence {
+            color: #267745;
+            font-weight: bold;
+        }
+        .empty {
+            text-align: center;
+            padding: 25px;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌱 Plant Disease Dashboard</h1>
+            <nav>
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('history') }}">Prediction History</a>
+            </nav>
+        </header>
+
+        <div class="cards">
+            <div class="card">
+                <h3>Total Predictions</h3>
+                <div class="number">{{ total_predictions }}</div>
+            </div>
+            <div class="card">
+                <h3>Healthy Leaves</h3>
+                <div class="number">{{ healthy_count }}</div>
+            </div>
+            <div class="card">
+                <h3>Diseased Leaves</h3>
+                <div class="number">{{ diseased_count }}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Recent Predictions</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plant</th>
+                            <th>Disease</th>
+                            <th>Confidence</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in recent_predictions %}
+                        <tr>
+                            <td>{{ record.plant }}</td>
+                            <td>{{ record.disease|replace('_', ' ') }}</td>
+                            <td class="confidence">{{ "%.2f"|format(record.confidence * 100) }}%</td>
+                            <td>{{ record.prediction_date.strftime("%d-%m-%Y %H:%M") if record.prediction_date else "N/A" }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="empty">No predictions available yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

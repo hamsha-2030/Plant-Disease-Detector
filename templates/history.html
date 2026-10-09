@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction History | Plant Disease Detector</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 25px;
+            font-family: Arial, sans-serif;
+            background: #f1f7f1;
+            color: #263b2c;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: #206b3a;
+            margin: 0;
+        }
+
+        .home-btn {
+            background: #267745;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 7px;
+            text-decoration: none;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 22px;
+        }
+
+        .search-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            min-width: 180px;
+            padding: 12px;
+            border: 1px solid #ccd9ce;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        button, .show-all {
+            border: none;
+            border-radius: 7px;
+            padding: 12px 17px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .search-btn {
+            background: #267745;
+            color: white;
+        }
+
+        .show-all {
+            background: #e5efe6;
+            color: #206b3a;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th, td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e3eae4;
+            text-align: left;
+        }
+
+        th {
+            background: #267745;
+            color: white;
+        }
+
+        tr:hover td {
+            background: #f6faf6;
+        }
+
+        .confidence {
+            color: #247543;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            background: #d94141;
+            color: white;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #66756a;
+        }
+
+        .count {
+            color: #627366;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 14px;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            .card {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌱 Prediction History</h1>
+            <a class="home-btn" href="{{ url_for('index') }}">Back to Home</a>
+        </header>
+
+        <div class="card">
+            <form class="search-form" action="{{ url_for('history') }}" method="GET">
+                <input type="text" name="search" placeholder="Search by plant or disease..." value="{{ search }}">
+                <button class="search-btn" type="submit">Search</button>
+                <a class="show-all" href="{{ url_for('history') }}">Show All</a>
+            </form>
+        </div>
+
+        <div class="card">
+            <p class="count">Records found: {{ records|length }}</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Image Name</th>
+                            <th>Plant</th>
+                            <th>Disease</th>
+                            <th>Confidence</th>
+                            <th>Date and Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record.image_name }}</td>
+                            <td>{{ record.plant }}</td>
+                            <td>{{ record.disease|replace('_', ' ') }}</td>
+                            <td class="confidence">{{ "%.2f"|format(record.confidence * 100) }}%</td>
+                            <td>{{ record.prediction_date.strftime("%d-%m-%Y %H:%M") if record.prediction_date else "N/A" }}</td>
+                            <td>
+                                <form action="{{ url_for('delete_prediction', record_id=record._id) }}" method="POST" onsubmit="return confirm('Delete this prediction record?');">
+                                    <button class="delete-btn" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td class="empty" colspan="6">No predictions found. Upload a leaf image to get started.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

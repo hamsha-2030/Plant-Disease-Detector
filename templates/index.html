@@ -1,0 +1,308 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Detection</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f7f0;
+            color: #263b2b;
+        }
+
+        header {
+            background: #14532d;
+            color: white;
+            text-align: center;
+            padding: 25px 15px;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 30px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: 15px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 18px;
+            background: white;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: white;
+            background: #217346;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            background: #14532d;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 30px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            color: #14532d;
+            text-align: center;
+        }
+
+        .upload-form {
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed #a5c9a5;
+            border-radius: 12px;
+            background: #f8fcf8;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            max-width: 350px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+
+        button {
+            background: #217346;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #14532d;
+        }
+
+        .error {
+            margin-top: 20px;
+            padding: 12px;
+            background: #ffe5e5;
+            color: #a00000;
+            border-radius: 8px;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f5faf5;
+            border: 1px solid #d5e8d5;
+            border-radius: 12px;
+        }
+
+        .result h2 {
+            margin-top: 0;
+        }
+
+        .uploaded-image {
+            display: block;
+            max-width: 100%;
+            max-height: 350px;
+            margin: 20px auto;
+            border-radius: 10px;
+            object-fit: contain;
+        }
+
+        .confidence {
+            font-size: 18px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 18px;
+            background: #dfe9df;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0 20px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: #2e8b57;
+            border-radius: 10px;
+        }
+
+        .prediction-item {
+            padding: 12px;
+            margin: 10px 0;
+            background: white;
+            border: 1px solid #dce8dc;
+            border-radius: 8px;
+        }
+
+        .info-section {
+            margin-top: 20px;
+            line-height: 1.7;
+        }
+
+        .info-section h3 {
+            color: #217346;
+            margin-bottom: 5px;
+        }
+
+        .info-section p {
+            margin-top: 5px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #526652;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 24px;
+            }
+
+            .container {
+                margin: 15px;
+                padding: 18px;
+            }
+
+            nav a {
+                padding: 10px 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🌱 Plant Disease Detection</h1>
+    <p>AI-powered plant leaf disease identification and treatment guidance</p>
+</header>
+
+<nav>
+    <a href="{{ url_for('index') }}">Home</a>
+    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('history') }}">Prediction History</a>
+</nav>
+
+<div class="container">
+    <h2>Upload a Plant Leaf Image</h2>
+
+    <form class="upload-form" method="POST" enctype="multipart/form-data">
+        <p>Select a clear image of a plant leaf to identify possible diseases.</p>
+        <input type="file" name="file" accept=".png,.jpg,.jpeg" required>
+        <button type="submit">Detect Disease</button>
+    </form>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if prediction %}
+        <div class="result">
+            <h2>Prediction Result</h2>
+
+            {% if image_path %}
+                <img class="uploaded-image"
+                     src="{{ url_for('static', filename=image_path.replace('\\', '/').replace('static/', '', 1)) }}"
+                     alt="Uploaded plant leaf">
+            {% endif %}
+
+            <p><strong>Predicted Disease:</strong> {{ prediction.replace('_', ' ') }}</p>
+
+            {% if confidence is not none %}
+                <div class="confidence">
+                    <strong>Confidence:</strong> {{ "%.2f"|format(confidence * 100) }}%
+                </div>
+
+                <div class="confidence-bar">
+                    <div class="confidence-fill"
+                         style="width: {{ [confidence * 100, 100]|min }}%;">
+                    </div>
+                </div>
+
+                {% if confidence >= HIGH_CONF %}
+                    <p><strong>Prediction Level:</strong> High confidence</p>
+                {% elif confidence >= MEDIUM_CONF %}
+                    <p><strong>Prediction Level:</strong> Moderate confidence</p>
+                {% else %}
+                    <p><strong>Prediction Level:</strong> Low confidence. Consider uploading a clearer leaf image.</p>
+                {% endif %}
+            {% endif %}
+
+            {% if top_predictions %}
+                <h3>Top Predictions</h3>
+                {% for item in top_predictions %}
+                    <div class="prediction-item">
+                        <strong>{{ loop.index }}. {{ item.plant.replace('_', ' ') }} — {{ item.disease.replace('_', ' ') }}</strong>
+                        <p>Confidence: {{ "%.2f"|format(item.confidence * 100) }}%</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if disease_info %}
+                <div class="info-section">
+                    <h3>Disease Information</h3>
+
+                    {% if disease_info.get('description') %}
+                        <p><strong>Description:</strong> {{ disease_info.get('description') }}</p>
+                    {% endif %}
+
+                    {% if disease_info.get('symptoms') %}
+                        <p><strong>Symptoms:</strong> {{ disease_info.get('symptoms') }}</p>
+                    {% endif %}
+
+                    {% if disease_info.get('cause') %}
+                        <p><strong>Cause:</strong> {{ disease_info.get('cause') }}</p>
+                    {% endif %}
+
+                    {% if disease_info.get('treatment') %}
+                        <p><strong>Treatment:</strong> {{ disease_info.get('treatment') }}</p>
+                    {% endif %}
+
+                    {% if disease_info.get('prevention') %}
+                        <p><strong>Prevention:</strong> {{ disease_info.get('prevention') }}</p>
+                    {% endif %}
+
+                    {% if disease_info.get('organic_treatment') %}
+                        <p><strong>Organic Treatment:</strong> {{ disease_info.get('organic_treatment') }}</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p>Disease information is not currently available for this prediction.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<footer>
+    <p>Plant Disease Detection System | Powered by Deep Learning and MongoDB</p>
+</footer>
+
+</body>
+</html>
+```
